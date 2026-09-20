@@ -138,7 +138,7 @@ machine, engine and settings that produced it.
 
 ---
 
-The idea for LLMBench emerged during the design and development of [ModelSetupHub](https://github.com/ModelSetupHub/ModelSetupHub). It was the result of collaboration and discussions between [Parsa Safaie](https://github.com/parsasafaie) and me, with parts of the original idea and several features of LLMBench also shaped by our shared suggestions and designs.
+The idea for LLMBench emerged during the design and development of [ModelSetupHub](https://github.com/ModelSetupHub). It was the result of collaboration and discussions between [Parsa Safaie](https://github.com/parsasafaie) and me, with parts of the original idea and several features of LLMBench also shaped by our shared suggestions and designs.
 
 LLMBench is an independent project with a more specific focus on benchmarking, measurement reproducibility, and the analysis of statistical significance.
 

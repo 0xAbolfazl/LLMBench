@@ -93,7 +93,7 @@ python app.py
 
 ---
 
-ایدهٔ LLMBench در جریان طراحی و توسعهٔ [ModelSetupHub](https://github.com/ModelSetupHub/ModelSetupHub) شکل گرفت. این ایده حاصل همکاری و تبادل نظر من و [Parsa Safaie](https://github.com/parsasafaie) بود و بخشی از ایدهٔ اولیه و قابلیت‌های LLMBench نیز از پیشنهادها و طراحی‌های مشترک ما شکل گرفتند.
+ایدهٔ LLMBench در جریان طراحی و توسعهٔ [ModelSetupHub](https://github.com/ModelSetupHub) شکل گرفت. این ایده حاصل همکاری و تبادل نظر من و [Parsa Safaie](https://github.com/parsasafaie) بود و بخشی از ایدهٔ اولیه و قابلیت‌های LLMBench نیز از پیشنهادها و طراحی‌های مشترک ما شکل گرفتند.
 
 LLMBench یک پروژهٔ مستقل با تمرکز مشخص‌تر بر benchmark، تکرارپذیری اندازه‌گیری‌ها و تحلیل معناداری نتایج است.
 
