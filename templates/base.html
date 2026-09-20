@@ -1,0 +1,76 @@
+{# Application shell: command bar, tab rail, view host, run dock, toasts. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LLMBench — Benchmark Console{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&gt;_</span>
+      <span class="brand-name">LLMBench</span>
+      <span class="brand-tag">benchmark console</span>
+    </div>
+    <button type="button" class="server-chip" id="server-chip"
+            title="Engine server status — click to open the engine station">
+      <span class="server-dot is-unknown" id="server-dot" aria-hidden="true"></span>
+      <span id="server-label">checking server…</span>
+    </button>
+  </header>
+
+  <nav class="tabrail" role="tablist" aria-label="Stations">
+    <button type="button" class="tab is-active" role="tab" id="tab-setup"
+            data-tab="setup" aria-selected="true" aria-controls="view-setup">
+      <span class="tab-name">Setup</span>
+      <span class="tab-badge" id="badge-setup"></span>
+    </button>
+    <button type="button" class="tab" role="tab" id="tab-engine"
+            data-tab="engine" aria-selected="false" aria-controls="view-engine">
+      <span class="tab-name">Engine</span>
+      <span class="tab-badge" id="badge-engine"></span>
+    </button>
+    <button type="button" class="tab" role="tab" id="tab-history"
+            data-tab="history" aria-selected="false" aria-controls="view-history">
+      <span class="tab-name">History</span>
+      <span class="tab-badge" id="badge-history"></span>
+    </button>
+    <button type="button" class="tab" role="tab" id="tab-log"
+            data-tab="log" aria-selected="false" aria-controls="view-log">
+      <span class="tab-name">Log</span>
+      <span class="tab-badge" id="badge-log"></span>
+    </button>
+  </nav>
+
+  <main class="views">
+    {% block views %}{% endblock %}
+  </main>
+
+  {# The run dock: a mission-control strip that rides the bottom edge of the
+     window while a benchmark is in flight, visible from any station. #}
+  <div class="run-dock is-hidden" id="run-dock" aria-live="polite">
+    <div class="run-dock-bar"><span class="run-dock-fill" id="dock-fill"></span></div>
+    <div class="run-dock-inner">
+      <span class="spinner" aria-hidden="true"></span>
+      <div class="dock-text">
+        <span class="dock-step" id="dock-step">starting…</span>
+        <span class="dock-detail" id="dock-detail"></span>
+      </div>
+      <span class="dock-clock" id="dock-clock">00:00</span>
+      <span class="dock-percent" id="dock-percent">0%</span>
+      <button type="button" class="btn btn-sm btn-danger" id="btn-dock-cancel">Abort</button>
+    </div>
+  </div>
+
+  <div class="modal-host" id="modal-host" hidden></div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

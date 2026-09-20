@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block views %}
+{# 01 · SETUP — what the test is made of (left) and the launch console (right).
+   What kind of test the inputs describe is derived, never chosen: one model
+   measures, two race, several configurations compare, several models with
+   several configurations is a tournament. #}
+<section class="view is-active" id="view-setup" role="tabpanel" aria-labelledby="tab-setup">
+  <div class="setup-grid">
+
+    <div class="setup-main">
+      <div class="alert is-hidden" id="bench-error" role="alert"></div>
+
+      {# A · models #}
+      <section class="block is-collapsible" aria-labelledby="block-models-title">
+        <header class="block-head">
+          <span class="block-tick" aria-hidden="true"></span>
+          <h2 class="block-title" id="block-models-title">Models</h2>
+          <span class="block-sub" id="model-count">no model selected</span>
+          <span class="block-spacer"></span>
+          <select id="engine-select" class="input is-select" aria-label="Inference engine"
+                  title="Which engine benchmarks these models"></select>
+          <button type="button" class="btn btn-sm" id="btn-models-refresh">Refresh</button>
+          <button type="button" class="block-toggle" aria-expanded="true"
+                  aria-controls="models-body" title="Collapse section"
+                  aria-label="Collapse Models section"></button>
+        </header>
+        <div class="block-body" id="models-body">
+          <div class="model-list" id="model-list"></div>
+          <p class="block-hint" id="model-hint"></p>
+        </div>
+      </section>
+
+      {# B · prompts #}
+      <section class="block is-collapsible" aria-labelledby="block-prompts-title">
+        <header class="block-head">
+          <span class="block-tick is-cyan" aria-hidden="true"></span>
+          <h2 class="block-title" id="block-prompts-title">Prompts</h2>
+          <span class="block-sub" id="prompt-count">no prompts written</span>
+          <span class="block-spacer"></span>
+          <button type="button" class="block-toggle" aria-expanded="true"
+                  aria-controls="prompts-body" title="Collapse section"
+                  aria-label="Collapse Prompts section"></button>
+        </header>
+        <div class="block-body" id="prompts-body">
+          <label class="field" for="bench-prompts">
+            <span class="field-label">Prompt set</span>
+            <textarea class="input mono" id="bench-prompts" rows="7" spellcheck="false"
+                      placeholder="One prompt per block, separated by a blank line.&#10;&#10;Write a prompt…"></textarea>
+          </label>
+          <div class="btn-row" style="margin-top:12px">
+            <label class="field">
+              <span class="field-label">Repetitions</span>
+              <input class="input is-num" id="bench-repetitions" type="number" dir="ltr"
+                     min="1" max="10" step="1" value="1" inputmode="numeric" style="width:90px">
+            </label>
+            <label class="switch" style="align-self:flex-end; padding-bottom:4px">
+              <input type="checkbox" id="bench-include-output">
+              <span class="switch-track" aria-hidden="true"></span>
+              <span class="switch-label">Keep generated text in results</span>
+            </label>
+          </div>
+          <p class="block-hint">
+            Each prompt runs this many times per entry; the results average the
+            runs and report their spread, which feeds the noise verdict.
+          </p>
+        </div>
+      </section>
+
+      {# C · configurations #}
+      <section class="block is-collapsible" aria-labelledby="block-configs-title">
+        <header class="block-head">
+          <span class="block-tick is-amber" aria-hidden="true"></span>
+          <h2 class="block-title" id="block-configs-title">Configurations</h2>
+          <span class="block-sub" id="config-count">none built</span>
+          <span class="block-spacer"></span>
+          <div class="btn-row">
+            <button type="button" class="btn btn-sm" id="btn-config-import">Import</button>
+            <button type="button" class="btn btn-sm btn-danger-ghost" id="btn-config-clear" disabled>Clear all</button>
+            <button type="button" class="btn btn-sm btn-accent" id="btn-config-add">+ Add</button>
+          </div>
+          <button type="button" class="block-toggle" aria-expanded="true"
+                  aria-controls="configs-body" title="Collapse section"
+                  aria-label="Collapse Configurations section"></button>
+        </header>
+        <div class="block-body" id="configs-body">
+          <div class="config-list" id="config-list"></div>
+          <div class="pairing is-hidden" id="pairing" aria-live="polite"></div>
+          <p class="block-hint">
+            Optional — with none, every model runs under its own defaults.
+            Several models with several configurations becomes a tournament:
+            pair each model with the configuration it races under.
+          </p>
+        </div>
+      </section>
+
+      {# D · results — carries the live run's progress until it settles, then
+            the finished comparison #}
+      <section class="block" aria-labelledby="block-results-title">
+        <header class="block-head">
+          <span class="block-tick is-dim" aria-hidden="true"></span>
+          <h2 class="block-title" id="block-results-title">Results</h2>
+          <span class="block-sub" id="results-meta"></span>
+        </header>
+        <div class="block-body" id="results-body">
+          <div class="empty-state">No benchmark has been run yet.</div>
+        </div>
+      </section>
+    </div>
+
+    {# launch console — sticky, never scrolls away #}
+    <aside class="setup-console" aria-label="Launch">
+      <div class="console-card">
+        <div class="console-head">
+          <span class="console-title">Launch console</span>
+          <span class="console-meta" id="run-meta" aria-live="polite"></span>
+        </div>
+
+        <div class="plan is-empty" id="plan" aria-live="polite"></div>
+
+        <div class="plan-stats" id="plan-stats"></div>
+
+        <button type="button" class="btn-run" id="btn-run" disabled>
+          <span id="btn-run-label">Run benchmark</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-block" id="btn-export-setup">
+          Export setup as file
+        </button>
+
+        <div class="readiness" aria-live="polite">
+          <span class="readiness-state" id="readiness-state">idle</span>
+          <span class="readiness-note" id="readiness-note">
+            Pick at least one model and write at least one prompt.
+          </span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+{# 02 · ENGINE — the station that owns which inference engine the app
+   benchmarks against, and everything about it. The chooser at the top is the
+   app-wide selection; configuration, the server, and the model list below it
+   are all scoped to whichever engine is chosen. #}
+<section class="view" id="view-engine" role="tabpanel" aria-labelledby="tab-engine" hidden>
+
+  {# A · engine chooser — the app-wide, bold selection #}
+  <section class="block" aria-labelledby="block-engine-title">
+    <header class="block-head">
+      <span class="block-tick" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-engine-title">Inference engine</h2>
+      <span class="block-sub">which engine runs the models</span>
+    </header>
+    <div class="block-body">
+      <div class="engine-chooser" id="engine-chooser" role="radiogroup"
+           aria-label="Inference engine"></div>
+      <p class="block-hint" id="engine-chooser-hint"></p>
+    </div>
+  </section>
+
+  {# B · configuration — where this engine lives and what it reads. llama.cpp
+       is configured here (installation folder and the model folders); Ollama
+       reads its host from the environment and is shown read-only. #}
+  <section class="block" aria-labelledby="block-config-title">
+    <header class="block-head">
+      <span class="block-tick is-amber" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-config-title">Configuration</h2>
+      <span class="block-sub" id="engine-config-meta"></span>
+      <span class="block-spacer"></span>
+      <button type="button" class="btn btn-sm btn-accent" id="btn-engine-config-apply" hidden>
+        Apply
+      </button>
+    </header>
+    <div class="block-body" id="engine-config-body"></div>
+  </section>
+
+  {# C · server — state, version, and start/stop where the engine has one.
+       llama.cpp has no server to start on its own: the buttons adapt. #}
+  <section class="block" aria-labelledby="block-server-title">
+    <header class="block-head">
+      <span class="block-tick" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-server-title"><span id="station-engine-title">Server</span></h2>
+      <span class="block-sub" id="engine-meta"></span>
+      <span class="block-spacer"></span>
+      <div class="btn-row">
+        <button type="button" class="btn btn-sm" id="btn-engine-refresh">Refresh</button>
+        <button type="button" class="btn btn-sm btn-accent" id="btn-engine-start">Start server</button>
+        <button type="button" class="btn btn-sm btn-danger-ghost" id="btn-engine-stop">Stop server</button>
+      </div>
+    </header>
+    <div class="block-body">
+      <div class="server-cards" id="server-cards"></div>
+      <div class="state-line" id="server-state-line"></div>
+    </div>
+  </section>
+
+  {# D · models — what this engine can run. For llama.cpp the recursive scan
+       of the configured folders; for Ollama the server's library. #}
+  <section class="block" aria-labelledby="block-engine-models-title">
+    <header class="block-head">
+      <span class="block-tick is-cyan" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-engine-models-title">Models</h2>
+      <span class="block-sub" id="engine-model-count"></span>
+      <span class="block-spacer"></span>
+      <button type="button" class="btn btn-sm" id="btn-engine-models-refresh">Re-scan</button>
+    </header>
+    <div class="block-body">
+      <div class="table-wrap">
+        <table class="data-table" aria-label="Engine models">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th class="is-number">Size</th>
+              <th>Details</th>
+              <th>Modified</th>
+              <th class="is-number">Memory</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="engine-model-rows"></tbody>
+        </table>
+      </div>
+      <div class="empty-state is-hidden" id="engine-models-empty"></div>
+    </div>
+  </section>
+</section>
+
+{# 03 · HISTORY — finished runs are saved automatically; this station lists
+   them, opens each run's detail inline, and removes one. #}
+<section class="view" id="view-history" role="tabpanel" aria-labelledby="tab-history" hidden>
+  <section class="block" aria-labelledby="block-history-title">
+    <header class="block-head">
+      <span class="block-tick is-dim" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-history-title">Saved runs</h2>
+      <span class="block-sub" id="history-count"></span>
+      <span class="block-spacer"></span>
+      <button type="button" class="btn btn-sm" id="btn-history-refresh">Refresh</button>
+    </header>
+    <div class="block-body" id="history-body">
+      <div class="empty-state">No saved runs yet. Finished runs land here automatically.</div>
+    </div>
+  </section>
+</section>
+
+{# 04 · LOG — the execution log the engine writes for every benchmark step,
+   read back here so a failed prompt or a cancellation can be traced. #}
+<section class="view" id="view-log" role="tabpanel" aria-labelledby="tab-log" hidden>
+  <section class="block" aria-labelledby="block-log-title">
+    <header class="block-head">
+      <span class="block-tick is-dim" aria-hidden="true"></span>
+      <h2 class="block-title" id="block-log-title">Execution log</h2>
+      <span class="block-sub" id="log-count"></span>
+    </header>
+    <div class="block-body">
+      <div class="log-toolbar">
+        <label class="field">
+          <span class="field-label">Level</span>
+          <select class="input" id="log-level" dir="ltr">
+            <option value="">All</option>
+            <option value="ERROR">ERROR</option>
+            <option value="WARNING">WARNING</option>
+            <option value="INFO">INFO</option>
+          </select>
+        </label>
+        <div class="log-actions">
+          <button type="button" class="btn" id="btn-log-refresh">Refresh</button>
+          <button type="button" class="btn btn-danger" id="btn-log-clear">Clear logs</button>
+        </div>
+        <span class="log-meta" id="log-meta"></span>
+      </div>
+      <div id="log-body">
+        <div class="empty-state">No log entries yet. Run a benchmark to see its steps appear here.</div>
+      </div>
+    </div>
+  </section>
+</section>
+{% endblock %}
